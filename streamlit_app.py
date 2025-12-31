@@ -16,7 +16,7 @@ from main import OptimizedFinancialDataRAG  # Import your optimized RAG class
 
 # Configure page
 st.set_page_config(
-    page_title="Tunisia Financial Data RAG System - Enhanced",
+    page_title="Tunisia Economic Intelligence System",
     page_icon="🦅",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -439,11 +439,11 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1>🦅 Tunisia Financial Data RAG System - Enhanced</h1>
+        <h1>🦅 Tunisia Economic Intelligence System</h1>
         <p style="color: white; text-align: center; margin: 0; font-size: 1.1rem;">
-            <span class="optimization-badge">📊 Table Generation</span>
-            <span class="optimization-badge">📥 Multi-Format Download</span>
-            <span class="optimization-badge">⚡ Enhanced Processing</span>
+            <span class="optimization-badge">🧠 Historical Analysis</span>
+            <span class="optimization-badge">📊 Smart Tables</span>
+            <span class="optimization-badge">📈 Trend Insights</span>
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -586,7 +586,7 @@ def main():
 
     # Main chat interface
     if st.session_state.system_ready:
-        st.subheader("💬 Enhanced Chat with Table Generation")
+        st.subheader("💬 Ask About Tunisia's Economy")
         
         # Display chat messages with enhanced formatting
         for i, message in enumerate(st.session_state.messages):
@@ -606,7 +606,7 @@ def main():
                             display_source_with_type(source, j)
 
         # Chat input with enhanced prompt
-        if prompt := st.chat_input("Ask about Tunisia's economic data (optimized for table generation)..."):
+        if prompt := st.chat_input("Ask about Tunisia's economy - I'll provide analysis with historical context..."):
             # Add user message
             st.session_state.messages.append({"role": "user", "content": prompt})
             
@@ -644,38 +644,36 @@ def main():
                 display_enhanced_response(assistant_message, len(st.session_state.messages) - 1)
 
     else:
-        # Enhanced welcome screen
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
             <div class="metrics-container">
-                <h3 style="text-align: center; color: #2d5aa0;">🚀 Enhanced RAG with Table Generation</h3>
+                <h3 style="text-align: center; color: #2d5aa0;">🚀 Tunisia Economic Intelligence System</h3>
                 <p style="text-align: center;">
-                    Welcome to the Enhanced Tunisia Financial Data RAG System!<br><br>
-                    <span class="optimization-badge">📊 Auto Table Generation</span>
-                    <span class="optimization-badge">📥 Multi-Format Downloads</span><br><br>
-                    New Features:
+                    AI-powered economic analysis with historical context<br><br>
+                    <span class="optimization-badge">🧠 Historical Analysis</span>
+                    <span class="optimization-badge">📊 Data Tables</span><br><br>
+                    Key Features:
                 </p>
                 <ul>
-                    <li>📊 <strong>Automatic Tables:</strong> Responses include structured data tables</li>
-                    <li>📥 <strong>Downloads:</strong> CSV, JSON, Excel format support</li>
-                    <li>📈 <strong>Statistics:</strong> Automatic summary calculations</li>
-                    <li>🎯 <strong>Enhanced Extraction:</strong> Better numerical data parsing</li>
-                    <li>📦 <strong>Bulk Export:</strong> Download all generated tables</li>
+                    <li>🧠 <strong>Contextual Analysis:</strong> Links economic data to major historical events (2011 Revolution, COVID-19, etc.)</li>
+                    <li>📊 <strong>Smart Tables:</strong> Automatic generation of structured data tables</li>
+                    <li>📈 <strong>Trend Interpretation:</strong> Explains the "why" behind economic changes</li>
+                    <li>📥 <strong>Multi-Format Export:</strong> Download in CSV, JSON, or Excel</li>
+                    <li>🌍 <strong>Comparative Insights:</strong> Regional and global context</li>
                 </ul>
             </div>
             """, unsafe_allow_html=True)
         
-        # Enhanced sample questions
-        st.subheader("💡 Sample Questions for Enhanced Table Generation:")
+        st.subheader("💡 Sample Questions:")
         
         table_questions = [
-            "📊 Show me Tunisia's GDP growth rates by year in a table",
-            "📈 Create a table of inflation data with trends",
-            "💰 Generate a comparison table of government vs private consumption",
-            "📉 Provide a structured table of poverty rates over time",
-            "🏭 Show industrial sector contributions in tabular format",
-            "💱 Create an exchange rate timeline table"
+            "📊 How did the 2011 Revolution impact Tunisia's GDP growth? Analyze the economic trends before and after.",
+            "💰 What were the main drivers of inflation in Tunisia during the 2010s?",
+            "🏭 Analyze the evolution of Tunisia's industrial sector from 2000 to 2020",
+            "📈 How did COVID-19 affect Tunisia's economy compared to the 2011 crisis?",
+            "💱 Explain the relationship between exchange rates and purchasing power in Tunisia",
+            "🌍 Compare Tunisia's economic performance with regional trends in North Africa"
         ]
         
         col1, col2 = st.columns(2)
@@ -685,15 +683,14 @@ def main():
             with col:
                 st.info(question)
 
-    # Enhanced footer
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: #666; font-size: 0.9rem;">
-        🦅 Enhanced Tunisia Financial Data RAG System<br>
-        <span class="optimization-badge">📊 Auto Table Generation</span>
-        <span class="optimization-badge">📥 Multi-Format Download</span>
-        <span class="optimization-badge">📈 Statistical Analysis</span><br>
-        <small>Generated Tables: {len(st.session_state.generated_tables)} | Ready for Download</small>
+        🦅 Tunisia Economic Intelligence System<br>
+        <span class="optimization-badge">🧠 Historical Context</span>
+        <span class="optimization-badge">📊 Smart Analysis</span>
+        <span class="optimization-badge">📥 Export Ready</span><br>
+        <small>Tables Generated: {len(st.session_state.generated_tables)}</small>
     </div>
     """, unsafe_allow_html=True)
 
