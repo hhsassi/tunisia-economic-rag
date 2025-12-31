@@ -136,35 +136,68 @@ def main():
                     progress_bar = st.progress(0)
                     status_text = st.empty()
                     
-                    # Load data asynchronously
-                    async def load_data():
-                        return await st.session_state.rag_system.process_urls_optimized(urls)
+                    # Load data with real-time progress
+                    documents = []
+                    total_urls = len(urls)
                     
-                    status_text.text("📥 Loading economic data...")
+                    status_text.text(f"📥 Loading 0/{total_urls} sources (0%)")
                     
-                    # Simulate progress
-                    for i in range(len(urls)):
-                        progress = int((i / len(urls)) * 90)
-                        progress_bar.progress(progress / 100)
-                        status_text.text(f"Loading: {progress}% ({i}/{len(urls)} sources)")
-                        time.sleep(0.05)
+                    async def load_single_url(url, index):
+                        """Load a single URL and return documents"""
+                        try:
+                            loader_class = __import__('langchain_community.document_loaders', fromlist=['WebBaseLoader']).WebBaseLoader
+                            loader = loader_class(url)
+                            docs = loader.load()
+                            return docs
+                        except Exception as e:
+                            st.warning(f"⚠️ Skipped URL {index+1}: {str(e)[:50]}")
+                            return []
                     
-                    # Actually load documents
-                    documents = asyncio.run(load_data())
+                    # Load URLs one by one with progress updates
+                    import asyncio
+                    
+                    async def load_all_with_progress():
+                        all_docs = []
+                        for i, url in enumerate(urls):
+                            # Load this URL
+                            docs = await load_single_url(url, i)
+                            
+                            # Process documents
+                            for doc in docs:
+                                doc.metadata.update({
+                                    'source_url': url,
+                                    'scraped_at': datetime.now().isoformat(),
+                                    'data_type': st.session_state.rag_system._classify_data_type(url)
+                                })
+                            
+                            all_docs.extend(docs)
+                            
+                            # Update progress AFTER loading (more realistic)
+                            progress = ((i + 1) / total_urls)
+                            progress_bar.progress(progress)
+                            status_text.text(f"📥 Loading {i+1}/{total_urls} sources ({int(progress*100)}%)")
+                        
+                        # Final progress
+                        progress_bar.progress(1.0)
+                        status_text.text(f"📥 Loaded {total_urls}/{total_urls} sources (100%)")
+                        return all_docs
+                    
+                    # Run the async loading
+                    documents = asyncio.run(load_all_with_progress())
                     
                     if not documents:
                         st.error("❌ No documents could be loaded")
                         return
                     
-                    progress_bar.progress(0.90)
+                    # Build vector database
                     status_text.text("🔨 Building vector database...")
                     st.session_state.rag_system.build_vector_database(documents)
                     
-                    progress_bar.progress(0.95)
+                    # Setup QA chain
                     status_text.text("🔧 Setting up QA chain...")
                     st.session_state.rag_system.setup_qa_chain()
                     
-                    progress_bar.progress(1.0)
+                    # Done!
                     status_text.text(f"✅ Ready! Loaded {len(documents)} documents")
                     
                     st.session_state.system_ready = True
@@ -256,9 +289,9 @@ def main():
         st.subheader("💡 Example Questions:")
         
         questions = [
-            "📊 How did the 2011 Revolution impact Tunisia's GDP growth?",
-            "🦠 What were the economic effects of COVID-19 on Tunisia?",
-            "💰 What is Tunisia's average inflation rate?"
+            "How did the 2011 Revolution impact Tunisia's GDP growth?",
+            "What were the economic effects of COVID-19 on Tunisia?",
+            "What is Tunisia's average inflation rate?"
         ]
         
         col1, col2, col3 = st.columns(3)
@@ -266,10 +299,7 @@ def main():
         
         for i, q in enumerate(questions):
             with cols[i]:
-                if st.button(q, key=f"example_{i}", use_container_width=True):
-                    # Add as if user typed it
-                    st.session_state.messages.append({"role": "user", "content": q})
-                    st.rerun()
+                st.code(q, language=None)
 
     else:
         # Welcome screen
@@ -291,9 +321,9 @@ def main():
         st.subheader("💡 Example Questions:")
         
         questions = [
-            "📊 How did the 2011 Revolution impact Tunisia's GDP growth?",
-            "🦠 What were the economic effects of COVID-19 on Tunisia?",
-            "💰 What is Tunisia's average inflation rate?"
+            "How did the 2011 Revolution impact Tunisia's GDP growth?",
+            "What were the economic effects of COVID-19 on Tunisia?",
+            "What is Tunisia's average inflation rate?"
         ]
         
         col1, col2, col3 = st.columns(3)
@@ -301,7 +331,7 @@ def main():
         
         for i, q in enumerate(questions):
             with cols[i]:
-                st.info(q)
+                st.code(q, language=None)
 
     # Footer
     st.markdown("---")
