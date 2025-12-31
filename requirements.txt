@@ -1,0 +1,36 @@
+# Core RAG System Dependencies
+langchain
+langchain-community
+langchain-core
+langchain-groq
+
+# Vector Database
+chromadb
+
+# Ollama Integration
+ollama
+
+# Web Scraping
+beautifulsoup4
+requests
+lxml
+
+# Data Processing
+pandas
+numpy
+
+# Async Support
+aiohttp
+asyncio
+
+# Logging and Utilities
+python-dotenv
+
+# Optional: For better text processing
+tiktoken
+transformers
+sentence-transformers
+
+#visualisation
+plotly
+scipy
