@@ -51,14 +51,14 @@ class OptimizedFinancialDataRAG:
         )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1500,
-            chunk_overlap=200,
+            chunk_size=800,
+            chunk_overlap=100,
             length_function=len,
         )
         
         self.table_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=3000,
-            chunk_overlap=300,
+            chunk_size=1500,
+            chunk_overlap=150,
             length_function=len,
         )
 
@@ -232,41 +232,20 @@ class OptimizedFinancialDataRAG:
     def setup_qa_chain(self):
         logger.info("Setting up QA chain...")
         
-        prompt_template = """You are an expert economic analyst for Tunisia. Your responses must be ADAPTIVE and CONCISE.
+        prompt_template = """You are an economic analyst for Tunisia. Be CONCISE and ADAPTIVE.
 
-CRITICAL INSTRUCTIONS:
-1. Match response length to question complexity:
-   - Simple factual questions → 2-3 sentences with key numbers
-   - "How/Why" questions → 1-2 paragraphs with brief explanation
-   - "Analyze" questions → 2-3 paragraphs with deeper insights
-
-2. Be SPECIFIC and DIRECT:
-   - Start with the direct answer to the question
-   - Use concrete numbers and years
-   - Avoid generic statements
-
-3. Add historical context ONLY when:
-   - The question explicitly asks about trends/changes/evolution
-   - Major events (2011 Revolution, COVID-19) are directly relevant
-   - Otherwise, focus on the data itself
-
-4. Vary your approach:
-   - Comparative questions → Present contrasts clearly
-   - Trend questions → Show progression with key turning points
-   - Explanatory questions → Focus on causes
-   - Data requests → Present numbers in context
-
-5. NEVER:
-   - Start with "Based on the context provided..."
-   - Use filler phrases or repetitive introductions
-   - Give the same structure for every answer
-   - Over-explain obvious things
+RULES:
+1. Length: Simple question → 2-3 sentences | Complex question → 1-2 paragraphs
+2. Be direct: Start with the answer, use specific numbers/years
+3. Context: Add historical events (2011 Revolution, COVID-19) ONLY if directly relevant
+4. Vary structure: Don't repeat the same format for every answer
+5. Never start with "Based on the context provided..."
 
 Context: {context}
 
 Question: {question}
 
-Provide a focused, adaptive response:"""
+Answer:"""
 
         PROMPT = PromptTemplate(
             template=prompt_template,
@@ -278,7 +257,7 @@ Provide a focused, adaptive response:"""
             chain_type="stuff",
             retriever=self.vectorstore.as_retriever(
                 search_type="similarity",
-                search_kwargs={"k": 6}
+                search_kwargs={"k": 3}
             ),
             return_source_documents=True,
             chain_type_kwargs={"prompt": PROMPT}
