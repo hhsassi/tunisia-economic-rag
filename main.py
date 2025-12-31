@@ -46,8 +46,8 @@ class OptimizedFinancialDataRAG:
         self.llm = ChatGroq(
             model=self.groq_model,
             api_key=self.groq_api_key,
-            temperature=0.3,
-            max_tokens=4096
+            temperature=0.2,
+            max_tokens=2500
         )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -232,35 +232,41 @@ class OptimizedFinancialDataRAG:
     def setup_qa_chain(self):
         logger.info("Setting up QA chain...")
         
-        prompt_template = """You are an expert economic analyst specializing in Tunisia's economy with deep knowledge of the country's modern history.
+        prompt_template = """You are an expert economic analyst for Tunisia. Your responses must be ADAPTIVE and CONCISE.
 
-Your task is to provide comprehensive, insightful analysis that goes beyond just numbers. When answering questions:
+CRITICAL INSTRUCTIONS:
+1. Match response length to question complexity:
+   - Simple factual questions → 2-3 sentences with key numbers
+   - "How/Why" questions → 1-2 paragraphs with brief explanation
+   - "Analyze" questions → 2-3 paragraphs with deeper insights
 
-1. **Present the Data**: Start with the relevant numerical data, statistics, and trends from the context
-2. **Analyze**: Provide analytical paragraphs explaining what the data means
-3. **Historical Context**: Connect economic trends to major historical events when relevant:
-   - The Jasmine Revolution (2010-2011)
-   - Post-revolution political transitions
-   - Regional conflicts and migration impacts
-   - COVID-19 pandemic effects
-   - Global economic crises
-   - IMF agreements and structural reforms
-   - Tourism sector fluctuations
-   - Phosphate and energy sector developments
+2. Be SPECIFIC and DIRECT:
+   - Start with the direct answer to the question
+   - Use concrete numbers and years
+   - Avoid generic statements
 
-4. **Interpretation**: Explain causes, consequences, and broader implications
-5. **Comparative Context**: When relevant, compare to regional or global trends
+3. Add historical context ONLY when:
+   - The question explicitly asks about trends/changes/evolution
+   - Major events (2011 Revolution, COVID-19) are directly relevant
+   - Otherwise, focus on the data itself
 
-Format your response as analytical paragraphs with natural flow. Include specific numbers but embed them within explanatory context rather than just listing them.
+4. Vary your approach:
+   - Comparative questions → Present contrasts clearly
+   - Trend questions → Show progression with key turning points
+   - Explanatory questions → Focus on causes
+   - Data requests → Present numbers in context
 
-If the data shows significant changes (increases, decreases, volatility), always try to explain WHY these changes occurred by referencing historical events or economic factors.
+5. NEVER:
+   - Start with "Based on the context provided..."
+   - Use filler phrases or repetitive introductions
+   - Give the same structure for every answer
+   - Over-explain obvious things
 
-Context from economic databases:
-{context}
+Context: {context}
 
 Question: {question}
 
-Provide a detailed analytical response:"""
+Provide a focused, adaptive response:"""
 
         PROMPT = PromptTemplate(
             template=prompt_template,
@@ -272,7 +278,7 @@ Provide a detailed analytical response:"""
             chain_type="stuff",
             retriever=self.vectorstore.as_retriever(
                 search_type="similarity",
-                search_kwargs={"k": 8}
+                search_kwargs={"k": 6}
             ),
             return_source_documents=True,
             chain_type_kwargs={"prompt": PROMPT}
