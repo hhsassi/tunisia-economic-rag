@@ -46,8 +46,8 @@ class OptimizedFinancialDataRAG:
         self.llm = ChatGroq(
             model=self.groq_model,
             api_key=self.groq_api_key,
-            temperature=0.1,
-            max_tokens=2048
+            temperature=0.3,
+            max_tokens=4096
         )
 
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -232,16 +232,35 @@ class OptimizedFinancialDataRAG:
     def setup_qa_chain(self):
         logger.info("Setting up QA chain...")
         
-        prompt_template = """You are a financial data analyst specializing in Tunisia's economy. 
-Use the following pieces of context to answer the question at the end. 
-If you find numerical data, present it clearly with years and values.
-If you don't know the answer, just say you don't have that information.
+        prompt_template = """You are an expert economic analyst specializing in Tunisia's economy with deep knowledge of the country's modern history.
 
-Context: {context}
+Your task is to provide comprehensive, insightful analysis that goes beyond just numbers. When answering questions:
+
+1. **Present the Data**: Start with the relevant numerical data, statistics, and trends from the context
+2. **Analyze**: Provide analytical paragraphs explaining what the data means
+3. **Historical Context**: Connect economic trends to major historical events when relevant:
+   - The Jasmine Revolution (2010-2011)
+   - Post-revolution political transitions
+   - Regional conflicts and migration impacts
+   - COVID-19 pandemic effects
+   - Global economic crises
+   - IMF agreements and structural reforms
+   - Tourism sector fluctuations
+   - Phosphate and energy sector developments
+
+4. **Interpretation**: Explain causes, consequences, and broader implications
+5. **Comparative Context**: When relevant, compare to regional or global trends
+
+Format your response as analytical paragraphs with natural flow. Include specific numbers but embed them within explanatory context rather than just listing them.
+
+If the data shows significant changes (increases, decreases, volatility), always try to explain WHY these changes occurred by referencing historical events or economic factors.
+
+Context from economic databases:
+{context}
 
 Question: {question}
 
-Provide a detailed answer with specific data points when available:"""
+Provide a detailed analytical response:"""
 
         PROMPT = PromptTemplate(
             template=prompt_template,
@@ -253,7 +272,7 @@ Provide a detailed answer with specific data points when available:"""
             chain_type="stuff",
             retriever=self.vectorstore.as_retriever(
                 search_type="similarity",
-                search_kwargs={"k": 5}
+                search_kwargs={"k": 8}
             ),
             return_source_documents=True,
             chain_type_kwargs={"prompt": PROMPT}
