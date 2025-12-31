@@ -5,9 +5,11 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import asyncio
 import logging
+import time
 from typing import List, Dict, Any
 from datetime import datetime
 from main import OptimizedFinancialDataRAG
+from langchain_community.document_loaders import WebBaseLoader
 
 st.set_page_config(
     page_title="Tunisia Economic Intelligence",
@@ -102,27 +104,60 @@ def main():
             st.info("💡 Load data to start chatting")
             
             if st.button("🚀 Load Economic Data"):
-                with st.spinner("Loading data sources..."):
-                    try:
-                        with open("data.txt", "r", encoding="utf-8") as f:
-                            urls = [line.strip() for line in f if line.strip()]
+                try:
+                    with open("data.txt", "r", encoding="utf-8") as f:
+                        urls = [line.strip() for line in f if line.strip()]
+                    
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    status_text.text("Loading data sources...")
+                    
+                    async def load_data_with_progress():
+                        docs = []
+                        total_urls = len(urls)
                         
-                        async def load_data():
-                            docs = await st.session_state.rag_system.process_urls_optimized(urls)
-                            return docs
+                        for i, url in enumerate(urls):
+                            progress = int((i / total_urls) * 100)
+                            progress_bar.progress(progress / 100)
+                            status_text.text(f"Loading: {progress}% ({i}/{total_urls} URLs)")
+                            
+                            try:
+                                loader = WebBaseLoader(url)
+                                url_docs = loader.load()
+                                for doc in url_docs:
+                                    doc.metadata.update({
+                                        'source_url': url,
+                                        'scraped_at': datetime.now().isoformat()
+                                    })
+                                docs.extend(url_docs)
+                            except Exception as e:
+                                st.warning(f"Skipped {url}: {str(e)[:50]}")
+                            
+                            await asyncio.sleep(0.1)
                         
-                        documents = asyncio.run(load_data())
+                        progress_bar.progress(100)
+                        status_text.text(f"Loading: 100% ({total_urls}/{total_urls} URLs)")
+                        return docs
+                    
+                    documents = asyncio.run(load_data_with_progress())
+                    
+                    if documents:
+                        status_text.text("Building vector database...")
+                        st.session_state.rag_system.build_vector_database(documents)
                         
-                        if documents:
-                            st.session_state.rag_system.build_vector_database(documents)
-                            st.session_state.rag_system.setup_qa_chain()
-                            st.session_state.system_ready = True
-                            st.success(f"✅ Loaded {len(documents)} documents")
-                            st.rerun()
-                        else:
-                            st.error("No documents loaded")
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
+                        status_text.text("Setting up QA chain...")
+                        st.session_state.rag_system.setup_qa_chain()
+                        
+                        st.session_state.system_ready = True
+                        status_text.text(f"✅ Ready! Loaded {len(documents)} documents")
+                        time.sleep(1.5)
+                        progress_bar.empty()
+                        st.rerun()
+                    else:
+                        st.error("No documents loaded")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
         else:
             st.success("🟢 System Ready")
             if st.button("🗑️ Clear Chat"):
@@ -162,6 +197,22 @@ def main():
                     with st.expander(f"📚 Sources ({len(result['source_documents'])})"):
                         for i, source in enumerate(result["source_documents"], 1):
                             display_source(source, i)
+        
+        st.markdown("---")
+        st.subheader("💡 Example Questions:")
+        
+        questions = [
+            "📊 How did the 2011 Revolution impact Tunisia's GDP growth?",
+            "🦠 What were the economic effects of COVID-19 on Tunisia?",
+            "💰 What is Tunisia's average inflation rate?"
+        ]
+        
+        col1, col2, col3 = st.columns(3)
+        cols = [col1, col2, col3]
+        
+        for i, q in enumerate(questions):
+            with cols[i]:
+                st.info(q)
 
     else:
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -183,8 +234,12 @@ def main():
             "💰 What is Tunisia's average inflation rate?"
         ]
         
-        for q in questions:
-            st.info(q)
+        col1, col2, col3 = st.columns(3)
+        cols = [col1, col2, col3]
+        
+        for i, q in enumerate(questions):
+            with cols[i]:
+                st.info(q)
 
     st.markdown("---")
     st.markdown("""
