@@ -56,15 +56,15 @@ class OptimizedFinancialDataRAG:
 
         # Text splitter for different content types
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=80,
+            chunk_size=200,
+            chunk_overlap=30,
             length_function=len,
         )
         
         # Table-specific splitter (larger chunks for tables)
         self.table_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=100,
+            chunk_size=400,
+            chunk_overlap=50,
             length_function=len,
         )
 
@@ -312,7 +312,7 @@ class OptimizedFinancialDataRAG:
 
         retriever = self.vectorstore.as_retriever(
             search_type="similarity",
-            search_kwargs={"k": 2}  # Increased for more comprehensive results
+            search_kwargs={"k": 1}  # Increased for more comprehensive results
         )
 
         # Enhanced prompt template for better table generation
@@ -519,9 +519,7 @@ async def main():
         return
 
     # Initialize enhanced RAG system
-    rag = OptimizedFinancialDataRAG(
-        groq_api_key="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"
-    )
+    rag = OptimizedFinancialDataRAG()
 
     print("=== Enhanced Financial Data RAG System ===")
     print(f"🚀 Processing {len(urls)} URLs with optimized extraction...")

@@ -71,6 +71,8 @@ if "rag_system" not in st.session_state:
     st.session_state.rag_system = None
 if "system_ready" not in st.session_state:
     st.session_state.system_ready = False
+if "questions_count" not in st.session_state:
+    st.session_state.questions_count = 0
 
 def display_chat_message(content: str, is_user: bool = False):
     """Display a chat message with appropriate styling"""
@@ -222,12 +224,14 @@ def main():
             
             if st.button("🗑️ Clear Chat", use_container_width=True):
                 st.session_state.messages = []
+                st.session_state.questions_count = 0
                 st.rerun()
             
             if st.button("🔄 Reload Data", use_container_width=True):
                 st.session_state.system_ready = False
                 st.session_state.rag_system = OptimizedFinancialDataRAG()
                 st.session_state.messages = []
+                st.session_state.questions_count = 0
                 st.rerun()
 
     # Main chat interface
@@ -249,33 +253,49 @@ def main():
 
         # Chat input
         if prompt := st.chat_input("Ask about Tunisia's economy..."):
-            # Add user message
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            display_chat_message(prompt, is_user=True)
-            
-            # Get AI response
-            with st.spinner("🔍 Analyzing economic data..."):
-                try:
-                    result = st.session_state.rag_system.query(prompt)
-                    
-                    # Add assistant message
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": result["answer"],
-                        "sources": result.get("source_documents", [])
-                    })
-                    
-                    # Display response
-                    display_chat_message(result["answer"], is_user=False)
-                    
-                    # Display sources
-                    if result.get("source_documents"):
-                        with st.expander(f"📚 View Sources ({len(result['source_documents'])})"):
-                            for i, source in enumerate(result["source_documents"], 1):
-                                display_source(source, i)
-                                
-                except Exception as e:
-                    error_msg = f"Sorry, I encountered an error: {str(e)}"
+            # Check question limit
+            if st.session_state.questions_count >= 2:
+                st.warning("⚠️ You have reached the limit of 2 questions.")
+                st.info("📧 For more questions, please contact me at: **hassen.haj-sassi@edu.dsti.institute**")
+            else:
+                # Increment question counter
+                st.session_state.questions_count += 1
+                
+                # Add user message
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                display_chat_message(prompt, is_user=True)
+                
+                # Get AI response
+                with st.spinner("🔍 Analyzing economic data..."):
+                    try:
+                        result = st.session_state.rag_system.query(prompt)
+                        
+                        # Add assistant message
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": result["answer"],
+                            "sources": result.get("source_documents", [])
+                        })
+                        
+                        # Display response
+                        display_chat_message(result["answer"], is_user=False)
+                        
+                        # Display sources
+                        if result.get("source_documents"):
+                            with st.expander(f"📚 View Sources ({len(result['source_documents'])})"):
+                                for i, source in enumerate(result["source_documents"], 1):
+                                    display_source(source, i)
+                        
+                        # Show remaining questions
+                        remaining = 2 - st.session_state.questions_count
+                        if remaining > 0:
+                            st.info(f"ℹ️ {remaining} question(s) remaining")
+                        else:
+                            st.warning("⚠️ You have used all your questions.")
+                            st.info("📧 For more access, contact: **hassen.haj-sassi@edu.dsti.institute**")
+                                    
+                    except Exception as e:
+                        error_msg = f"Sorry, I encountered an error: {str(e)}"
                     st.session_state.messages.append({
                         "role": "assistant",
                         "content": error_msg,
